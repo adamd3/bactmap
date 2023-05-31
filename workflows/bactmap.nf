@@ -222,16 +222,28 @@ workflow BACTMAP {
     workflow_summary    = WorkflowBactmap.paramsSummaryMultiqc(workflow, summary_params)
     ch_workflow_summary = Channel.value(workflow_summary)
 
-    MULTIQC (
-            ch_multiqc_config,
-            ch_multiqc_custom_config.collect().ifEmpty([]),
-            GET_SOFTWARE_VERSIONS.out.yaml.collect(),
-            ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'),
-            FASTP.out.json.collect{it[1]}.ifEmpty([]),
-            BAM_SORT_SAMTOOLS.out.stats.collect{it[1]}.ifEmpty([]),
-            VARIANTS_BCFTOOLS.out.stats.collect{it[1]}.ifEmpty([])
-        )
-        multiqc_report = MULTIQC.out.report.toList()
+    if (params.trim){
+        MULTIQC (
+                ch_multiqc_config,
+                ch_multiqc_custom_config.collect().ifEmpty([]),
+                GET_SOFTWARE_VERSIONS.out.yaml.collect(),
+                ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'),
+                FASTP.out.json.collect{it[1]}.ifEmpty([]),
+                BAM_SORT_SAMTOOLS.out.stats.collect{it[1]}.ifEmpty([]),
+                VARIANTS_BCFTOOLS.out.stats.collect{it[1]}.ifEmpty([])
+            )
+    } else {
+        MULTIQC (
+                ch_multiqc_config,
+                ch_multiqc_custom_config.collect().ifEmpty([]),
+                GET_SOFTWARE_VERSIONS.out.yaml.collect(),
+                ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'),
+                [],
+                BAM_SORT_SAMTOOLS.out.stats.collect{it[1]}.ifEmpty([]),
+                VARIANTS_BCFTOOLS.out.stats.collect{it[1]}.ifEmpty([])
+            )
+    }
+    multiqc_report = MULTIQC.out.report.toList()
 }
 
 /*
